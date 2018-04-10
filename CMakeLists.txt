@@ -3,4 +3,4 @@ project(OS_Ex2_Updated C)
 
 set(CMAKE_C_STANDARD 90)
 
-add_executable(OS_Ex2_Updated main.c)
+add_executable(OS_Ex2_Updated ex2.c)

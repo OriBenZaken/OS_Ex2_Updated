@@ -99,8 +99,18 @@ void changeDirectory(char** args, char* previous_wd) {
     }
 }
 
+/***
+ * Executes the command. besides special commands, a new process is created and than call execvp
+ * to actually run the command code
+ * @param jobs jobs array
+ * @param command command
+ * @param args command split to tokens
+ * @param waitFlag background command flag
+ * @param previous_wd previous working directory
+ */
 void executeCommand(job* jobs, char* command, char** args, int waitFlag, char* previous_wd) {
     int retVal;
+    // special commands implementation
     if (!strcmp(args[0], "exit")) {
         printf("%d\n", getpid());
         exit(0);
@@ -120,6 +130,7 @@ void executeCommand(job* jobs, char* command, char** args, int waitFlag, char* p
         printf("fork error\n");
         return;
     }
+    // main process prints the child process pid
     if (pid != 0) {
         printf("%d\n",pid);
     }
@@ -134,8 +145,10 @@ void executeCommand(job* jobs, char* command, char** args, int waitFlag, char* p
         }
         // main process
     } else {
+        // not a background command
         if (waitFlag) {
             waitpid(pid, NULL, 0);
+            // background command - add to jobs array
         } else {
             command[strlen(command) - 1] = '\0';
             int jobInsertSuccess = insertToJobsArray(jobs, pid, command);
@@ -145,18 +158,20 @@ void executeCommand(job* jobs, char* command, char** args, int waitFlag, char* p
         }
     }
 }
-
+/***
+ * Shell implementation
+ * @return 0
+ */
 int main() {
+    char command[MAX_COMMAND_LENGTH];   // command string input
+    char* args[MAX_COMMAND_ARGS];   // command split into tokens
+    job jobs[MAX_JOBS_NUMBER];  // jobs array
+    char previous_wd[DIRECTROY_PATH_SIZE];  // keeps the previous working directory
 
-    char command[MAX_COMMAND_LENGTH];
-    char* args[MAX_COMMAND_ARGS];
-    job jobs[MAX_JOBS_NUMBER];
-    char previous_wd[DIRECTROY_PATH_SIZE];
-    char wd[DIRECTROY_PATH_SIZE];
     initalizeJobsArray(jobs);
 
     while (true) {
-        printf("prompt> ");
+        printf("prompt!> ");
         fgets(command, MAX_COMMAND_LENGTH, stdin);
         // remove new line character
         command[strlen(command) - 1] = '\0';
@@ -164,12 +179,13 @@ int main() {
         if (command[0] == '\0') {
             continue;
         }
-
         char commandCpy[MAX_COMMAND_LENGTH];
+        // copy command for the jobs array
         strcpy(commandCpy, command);
-
+        // background command flag - set to NOT background flag by default
         int waitFlag = WAIT;
         stringToExecvArgs(args, command, &waitFlag);
+        // execute the command
         executeCommand(jobs, commandCpy, args, waitFlag, previous_wd);
         if (!strcmp(args[0], "cat")) {
             printf("\n");
