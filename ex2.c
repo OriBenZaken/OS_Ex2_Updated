@@ -15,8 +15,6 @@
 #define NO_JOB -2
 #define DIRECTROY_PATH_SIZE 1024
 
-//global variable - saves the previous  working directory
-
 
 typedef struct job {
     char command[MAX_COMMAND_LENGTH];
@@ -195,7 +193,7 @@ int main() {
     initalizeJobsArray(jobs);
 
     while (true) {
-        printf("prompt!> ");
+        printf("prompt> ");
         fgets(command, MAX_COMMAND_LENGTH, stdin);
         // remove new line character
         command[strlen(command) - 1] = '\0';
