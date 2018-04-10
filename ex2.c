@@ -23,6 +23,10 @@ typedef struct job {
     pid_t pid;
 } job;
 
+/**
+ * intializes the jobs array
+ * @param jobs
+ */
 void initalizeJobsArray(job* jobs) {
     int i;
     for (i = 0; i < MAX_JOBS_NUMBER; i++) {
@@ -31,10 +35,18 @@ void initalizeJobsArray(job* jobs) {
     }
 }
 
+/**
+ * insert a command (job) into the jobs array
+ * @param jobs jobs array
+ * @param pid process pid
+ * @param command command
+ * @return 1 - insertion succeeded, 0 - insertion failed
+ */
 int insertToJobsArray(job* jobs, pid_t pid, char* command) {
     int i = 0;
     int status;
     while (i < MAX_JOBS_NUMBER) {
+        // index is availabe or the job in the index isn't running anymore
         if (jobs[i].pid == NO_JOB || waitpid(jobs[i].pid, &status, WNOHANG) != 0) {
             jobs[i].pid = pid;
             strcpy(jobs[i].command, command);
@@ -48,9 +60,14 @@ int insertToJobsArray(job* jobs, pid_t pid, char* command) {
     return 1;
 }
 
+/**
+ * prints to the console all the running jobs.
+ * @param jobs jobs array
+ */
 void displayJobs(job* jobs) {
     int i, status;
     for (i = 0; i < MAX_JOBS_NUMBER; i++) {
+        // pid has a meaningful value and the process is running
         if (jobs[i].pid != NO_JOB && waitpid(jobs[i].pid, &status, WNOHANG) == 0) {
             printf("%d %s\n", jobs[i].pid, jobs[i].command);
         } else {
@@ -59,6 +76,12 @@ void displayJobs(job* jobs) {
     }
 }
 
+/***
+ * split the command string to tokens
+ * @param args char* array - for the command name and arguments
+ * @param command command
+ * @param waitFlag background command flag
+ */
 void stringToExecvArgs(char** args, char* command, int* waitFlag) {
     char* token = strtok(command, " ");
     int i = 0;
@@ -66,6 +89,7 @@ void stringToExecvArgs(char** args, char* command, int* waitFlag) {
         args[i++] = token;
         token = strtok(NULL, " ");
     }
+    // command with '&' in the end is a background command
     if (strcmp(args[i - 1],"&") == 0) {
         *waitFlag = DONT_WAIT;
         args[i - 1] = NULL;
